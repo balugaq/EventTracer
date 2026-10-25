@@ -12,7 +12,7 @@ acf = "0.5.1-SNAPSHOT"
 # 注解
 jetbrainsAnnotations = "26.1.0"
 # 测试：JUnit 5.14.x 与 MockBukkit 4.x 运行时（junit-jupiter 5.11.3）保持同大版本
-junit = "5.14.4"
+junit = "6.1.3"
 junitPlatform = "1.14.4"
 # MockBukkit 官方未发布 v1.17 线，最低可用为 v1.21（测试跑在 1.21 mock 上，见 docs/HANDOFF.md「已知偏差」）
 mockbukkit = "4.116.3"
