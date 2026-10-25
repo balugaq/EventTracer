@@ -18,7 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * 全量包装通过 {@link ListenerBinder} 直接操作 {@link org.bukkit.event.HandlerList} 完成，
  * 因此不存在「自己触发自己被包装」的递归，命令走 ACF 也不产生事件。
  */
-public final class EventTracePlugin extends JavaPlugin {
+public class EventTracePlugin extends JavaPlugin {
     private static EventTracePlugin instance;
 
     private ConfigManager configManager;
