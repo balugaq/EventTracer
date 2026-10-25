@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # Gradle 依赖自动更新（libs.versions.toml）
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # paper-api 版本与插件目标（最低运行 1.17）强绑定，不由 dependabot 升级；
+    # 测试用 paper-api（1.21.x）同理，升级需人工核对 MockBukkit 兼容性。
+    ignore:
+      - dependency-name: "io.papermc.paper:paper-api"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions 自动更新
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

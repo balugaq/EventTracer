@@ -19,7 +19,7 @@
 **目标**：插件能编译、能加载、`/etrace stats` 有数据、debug 关闭时零行为改变；工程化（CI/发版/CODEOWNERS/dependabot）与文档齐备。
 
 ### 交付物
-- **构建体系**：Gradle 9.8.1（wrapper）、Java 17（`options.release=17`，无 toolchain 依赖）、Paper API `1.17.1-R0.1-SNAPSHOT`（最低运行 1.17，`api-version: 1.17`）、依赖版本集中于 `gradle/libs.versions.toml`、shadow 打包、run-paper 开发服（1.17.1）。
+- **构建体系**：Gradle 9.8.1（wrapper）、Java 17（`options.release=17`，无 toolchain 依赖）、Paper API `1.17.1-R0.1-SNAPSHOT`（最低运行 1.17，`api-version: 1.17`）、依赖版本集中于 `gradle/libs.versions.toml`、shadow 打包、run-paper 开发服（MC 26.2，与最低运行版本 1.17 解耦）。
 - **包结构**：`com.balugaq.eventtrace`（config / gate / trace / lang / commands）。
 - **配置**（`config.yml`）：`language`、`exempt-events`（事件全名列表，默认 `PlayerMoveEvent`、`EntityAirChangeEvent`、`BlockPhysicsEvent`；兼容简名）、`rebind-interval-minutes`（默认 5）。
 - **Gate 机制（idle 档）**：
