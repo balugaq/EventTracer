@@ -1,0 +1,27 @@
+prefix: "&a[EventTracer] &r"
+
+commands:
+  help:
+    - "&aEventTracer 命令帮助 &7(v1)"
+    - "&7/etrace &f- 显示本帮助"
+    - "&7/etrace debug on|off &f- 开关调试（关闭后零开销）"
+    - "&7/etrace stats [top] &f- 事件频率统计"
+    - "&7/etrace stats reset &f- 清空统计"
+    - "&7/etrace reload &f- 重新加载配置与语言"
+  debug:
+    on: "&a调试已开启，事件频率开始统计。"
+    off: "&a调试已关闭，Gate 回到 idle 快路。"
+  stats:
+    header: "&7=== 事件频率统计（前 {0} 项，共 {1} 种事件）==="
+    line: "&e{0}. &f{1} &7×&e{2}"
+    empty: "&7暂无统计数据，请先执行 &f/etrace debug on"
+    reset: "&a统计已清空。"
+  reload:
+    done: "&a配置与语言已重新加载。"
+
+exempt:
+  count: "&7已加载 {0} 条赦免事件规则。"
+
+plugin:
+  enabled: "&aEventTracer 已启用。"
+  disabled: "&aEventTracer 已禁用。"

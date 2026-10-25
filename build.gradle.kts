@@ -1,35 +1,31 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.gradle.language.jvm.tasks.ProcessResources
 
 plugins {
     java
     alias(libs.plugins.shadow)
-    id("xyz.jpenilla.run-paper") version "3.0.2"
-    id("maven-publish")
-    id("signing")
-    id("io.github.sgtsilvio.gradle.maven-central-publishing") version "0.5.0"
+    alias(libs.plugins.run.paper)
 }
 
 group = "io.github.balugaq"
-version = "0.0.1"
+version = "0.1.0"
 
+// 不用 toolchain：options.release=17 已保证 API 目标为 Java 17，
+// 且不要求开发机/CI 之外额外安装 JDK 17（Gradle 9.8.1 可在 JDK 17+ 上运行）。
+// 若误用 18+ API，javac --release 17 会直接报错拦截。
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    // toolchain 不设置，见上
 }
 
 tasks.compileJava {
     options.encoding = "UTF-8"
-    options.release.set(21)
+    // 插件产物锁定到 Java 17 字节码（最低运行环境 1.17 的服务器多为 Java 17+）
+    options.release.set(17)
 }
 
-tasks.withType<Javadoc>().configureEach {
-    // 出错（含 doclint 之外的警告）也不让 javadoc 任务失败，避免阻断构建/发布
-    isFailOnError = false
-    (options as StandardJavadocDocletOptions).apply {
-        encoding = "UTF-8"
-        charSet = "UTF-8"
-        addStringOption("Xdoclint", "none")
-    }
+tasks.compileTestJava {
+    options.encoding = "UTF-8"
+    // 测试期依赖 MockBukkit 4.x（要求 JVM 21+），测试代码仅开发期/CI 运行，放宽到 21
+    options.release.set(21)
 }
 
 tasks.withType<JavaExec>().configureEach {
@@ -38,30 +34,50 @@ tasks.withType<JavaExec>().configureEach {
     systemProperty("sun.stderr.encoding", "UTF-8")
 }
 
+tasks.withType<Javadoc>().configureEach {
+    // 不让 javadoc 警告阻断构建
+    isFailOnError = false
+    (options as StandardJavadocDocletOptions).apply {
+        encoding = "UTF-8"
+        charSet = "UTF-8"
+        addStringOption("Xdoclint", "none")
+    }
+}
+
 repositories {
     mavenCentral()
-    maven("https://oss.sonatype.org/content/groups/public/")
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
-    maven("https://jitpack.io")
     maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://repo.alessiodp.com/releases/")
+    // ACF 仅发布在 aikar 自有仓库（SNAPSHOT）
+    maven("https://repo.aikar.co/content/groups/aikar/")
 }
 
 dependencies {
-    implementation(libs.libby.bukkit)
+    // Paper 编译期依赖：最低运行 1.17（见 gradle.properties / plugin.yml api-version）
     compileOnly(libs.paper.api)
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
+    // 测试编译/运行环境：MockBukkit 4.x 照 paper-api 1.21.1 编写，测试须用同版 Bukkit 类
+    testCompileOnly(libs.paper.api.test)
+    testRuntimeOnly(libs.paper.api.test)
+    compileOnly(libs.jetbrains.annotations)
 
-    // System-scoped local JARs
-    // compileOnly(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
+    // 命令框架 ACF：注解驱动，shade 进 fat jar（co.aikar 命名空间独立，不 relocate）
+    implementation(libs.acf.bukkit)
 
+    // 测试：JUnit 5 + MockBukkit。
+    // MockBukkit 无 v1.17 线，最低为 v1.21；其自带 paper-api 1.21.1 运行时，
+    // 测试因此跑在 1.21 mock 上（主代码编译期锁定 1.17.1，API 子集已核对跨版本稳定）。
+    // 排除 MockBukkit 传递的 junit-jupiter，由我们显式锁定 5.14.x。
     testImplementation(libs.junit.jupiter)
-    testImplementation(libs.mockito.core)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.mockbukkit) {
+        exclude(group = "org.junit.jupiter")
+    }
 }
 
 tasks.test {
     useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
 
 tasks.jar {
@@ -69,7 +85,8 @@ tasks.jar {
 }
 
 tasks.named<ProcessResources>("processResources") {
-    filesMatching("**/*.yml") {
+    // 仅对 plugin.yml 做版本占位符替换；语言/配置文件内含 {0} 占位符，不能走 expand。
+    filesMatching("plugin.yml") {
         expand(
             mapOf(
                 "version" to project.version,
@@ -82,17 +99,12 @@ tasks.named<ProcessResources>("processResources") {
 tasks.named<ShadowJar>("shadowJar") {
     archiveVersion.set(project.version.toString())
     archiveClassifier.set("")
-    relocate("net.byteflux.libby", "io.github.balugaq.libraries.libby")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 val sourcesJar = tasks.register<Jar>("sourcesJar") {
     archiveClassifier.set("sources")
     from(sourceSets.main.get().allSource)
-}
-
-val javadocJar = tasks.register<Jar>("javadocJar") {
-    archiveClassifier.set("javadoc")
-    from(tasks.named<Javadoc>("javadoc"))
 }
 
 tasks.build {
@@ -120,71 +132,12 @@ tasks.runServer {
     jvmArgs(
         "-Dfile.encoding=UTF-8",
         "-Dsun.jnu.encoding=UTF-8",
-        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5001",
+        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005",
         "-Dnet.kyori.adventure.text.warn_when_legacy_formatting_detected=false"
     )
     maxHeapSize = "4G"
-    minecraftVersion("1.20.1")
+    // 开发服：用于本地调试的 MC 版本（与最低运行版本 1.17 解耦）
+    minecraftVersion("26.2")
 }
 
-publishing {
-    repositories {
-        maven {
-            name = "Central"
-            url = uri("https://central.sonatype.com/api/v1/publisher")
-        }
-    }
-    publications {
-        create<MavenPublication>("mavenJava") {
-            artifact(tasks.named("shadowJar"))
-            // Maven Central 发布硬性要求：附带 sources / javadoc 构件
-            artifact(sourcesJar)
-            artifact(javadocJar)
-
-            pom {
-                name = "${name}"
-                description = "This is MyProject's description"
-                url = "https://github.com/balugaq/${name}"
-                licenses {
-                    license {
-                        name = "MIT License"
-                        url  = "https://opensource.org/licenses/MIT"
-                    }
-                }
-                developers {
-                    developer {
-                        id = "balugaq"
-                        name = "balugaq"
-                        email = "balugaq@qq.com"
-                    }
-                }
-                scm {
-                    connection = "scm:git:https://github.com/balugaq/${name}.git"
-                    developerConnection = "scm:git:ssh://github.com/balugaq/${name}.git"
-                    url = "https://github.com/balugaq/${name}"
-                }
-            }
-        }
-    }
-}
-
-// 签名配置
-signing {
-    // 从环境变量或 gradle.properties 读取敏感信息；
-    // 仅在提供了签名密钥时才启用签名，避免本地 build/无密钥时配置失败
-    val signingKey = providers.gradleProperty("signingKey")
-        .orElse(providers.systemProperty("signingKey"))
-        .orElse(providers.environmentVariable("SIGNING_KEY"))
-        .orNull
-
-    val signingPassword = providers.gradleProperty("signingPassword")
-        .orElse(providers.systemProperty("signingPassword"))
-        .orElse(providers.environmentVariable("SIGNING_PASSWORD"))
-        .orNull
-    if (signingKey != null && signingPassword != null) {
-        useInMemoryPgpKeys(signingKey, signingPassword)
-        sign(publishing.publications["mavenJava"])
-    } else {
-        // 未提供签名密钥（例如本地开发构建），跳过签名
-    }
-}
+defaultTasks("clean", "build")

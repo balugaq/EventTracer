@@ -1,16 +1,31 @@
 [versions]
-shadow = "9.3.2"
-paper = "1.21.11-R0.1-SNAPSHOT"
-lombok = "1.18.46"
-junit = "5.11.4"
-mockito = "5.14.2"
+# 插件目标环境：最低运行 1.17（Paper 1.17.1 构建）
+paper = "1.17.1-R0.1-SNAPSHOT"
+# 测试环境：MockBukkit 4.x 仅发布 v1.21 线，其 API 需含 components.CustomModelDataComponent 等较新类，
+# 故测试编译/运行用 1.21.11（主代码仍锁定 1.17.1，见 docs/HANDOFF.md「已知偏差」）
+paperTest = "1.21.11-R0.1-SNAPSHOT"
+# 构建工具
+shadow = "9.6.1"
+runPaper = "3.1.0"
+# 命令框架 ACF（注解驱动，仅 aikar 仓库提供 SNAPSHOT）
+acf = "0.5.1-SNAPSHOT"
+# 注解
+jetbrainsAnnotations = "26.1.0"
+# 测试：JUnit 5.14.x 与 MockBukkit 4.x 运行时（junit-jupiter 5.11.3）保持同大版本
+junit = "5.14.4"
+junitPlatform = "1.14.4"
+# MockBukkit 官方未发布 v1.17 线，最低可用为 v1.21（测试跑在 1.21 mock 上，见 docs/HANDOFF.md「已知偏差」）
+mockbukkit = "4.116.3"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
-lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
-libby-bukkit = { module = "net.byteflux:libby-bukkit", version = "1.3.1" }
+paper-api-test = { module = "io.papermc.paper:paper-api", version.ref = "paperTest" }
+acf-bukkit = { module = "co.aikar:acf-bukkit", version.ref = "acf" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrainsAnnotations" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
-mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junitPlatform" }
+mockbukkit = { module = "org.mockbukkit.mockbukkit:mockbukkit-v1.21", version.ref = "mockbukkit" }
 
 [plugins]
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }

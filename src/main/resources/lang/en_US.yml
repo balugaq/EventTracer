@@ -1,0 +1,27 @@
+prefix: "&a[EventTracer] &r"
+
+commands:
+  help:
+    - "&aEventTracer command help &7(v1)"
+    - "&7/etrace &f- show this help"
+    - "&7/etrace debug on|off &f- toggle debug (zero overhead when off)"
+    - "&7/etrace stats [top] &f- event frequency report"
+    - "&7/etrace stats reset &f- clear statistics"
+    - "&7/etrace reload &f- reload config and language"
+  debug:
+    on: "&aDebug enabled, event frequency is now recorded."
+    off: "&aDebug disabled, Gate back to idle fast path."
+  stats:
+    header: "&7=== Event frequency (top {0}, {1} distinct events) ==="
+    line: "&e{0}. &f{1} &7×&e{2}"
+    empty: "&7No statistics yet, run &f/etrace debug on"
+    reset: "&aStatistics cleared."
+  reload:
+    done: "&aConfig and language reloaded."
+
+exempt:
+  count: "&7Loaded {0} exempt event rule(s)."
+
+plugin:
+  enabled: "&aEventTracer enabled."
+  disabled: "&aEventTracer disabled."

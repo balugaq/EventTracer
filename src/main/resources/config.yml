@@ -1,0 +1,15 @@
+# 语言：zh_CN / en_US
+language: zh_CN
+
+# 调试总开关（默认 off = idle 快路，零开销）
+debug: false
+
+# 全量重新包装所有监听器的时间间隔（分钟）；0 表示关闭定时重新包装
+rebind-interval-minutes: 5
+
+# 赦免事件：这些事件永远走快路，不记录、不命中断点。
+# 支持事件全名（org.bukkit.xxx.event.XxxEvent）或简名（XxxEvent）。
+exempt-events:
+  - PlayerMoveEvent
+  - EntityAirChangeEvent
+  - BlockPhysicsEvent

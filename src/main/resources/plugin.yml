@@ -1,9 +1,10 @@
 name: '${name}'
 version: '${version}'
-main: com.balugaq.myproject.MyProject
-api-version: '1.21'
-depend: []
-softdepend: []
-loadBefore: []
-authors: [balugaq]
-description: 'This is MyProject's description'
+main: com.balugaq.eventtrace.EventTracePlugin
+api-version: '1.17'
+author: balugaq
+description: '调试事件触发顺序、取消归因、频率监控与游戏内断点单步的 Paper 插件'
+permissions:
+  etrace.admin:
+    description: 'EventTracer 管理权限（debug / stats / reload）'
+    default: op
